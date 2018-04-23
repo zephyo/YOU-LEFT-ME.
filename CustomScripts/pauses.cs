@@ -83,7 +83,13 @@ public class pauses : MonoBehaviour
     }
 	public IEnumerator waitthenUp(float sec, AudioSource ass, int clip){
 		yield return new WaitForSeconds(sec);
-	 ass.clip = audios[clip];
+        if (clip>=3){
+            ass.pitch=Random.Range(0.81f, 0.87f);
+        }else{
+             ass.clip = audios[clip];
+             ass.pitch=Random.Range(0.97f, 1.03f);
+        }   
+	
             ass.Play();
 		up.TransitionTo(0.7f);
 	}
@@ -118,6 +124,21 @@ public class pauses : MonoBehaviour
     public void DeleteData()
     {
         PlayerPrefs.DeleteAll();
+        if (SceneManager.GetActiveScene().buildIndex==1){
+            StartCoroutine(fade());
+           
+                
+        }
+    }
+
+
+    IEnumerator fade(){
+         FadeOut(transform.GetChild(0).GetComponent<CanvasGroup>());
+             FadeOut(transform.GetChild(1).GetComponent<CanvasGroup>());
+             yield return new WaitForSeconds(0.2f);
+             SceneManager.UnloadSceneAsync("Main");
+             SceneManager.LoadScene("Start");
+    
     }
 
 

@@ -7,13 +7,18 @@ public class ticker : MonoBehaviour {
 
 	public RectTransform tick;
 	float currtime;
+
+	public float against;
 	
-	// Update is called once per frame
+private void Start()
+{
+	currtime+=0.5f;
+}
 	void FixedUpdate () {
 		currtime+=Time.deltaTime;
 	
-		int sec=  Convert.ToInt32(currtime%60);
-		if (sec>=2){
+		float sec=  currtime%60;
+		if (sec>against){
 			currtime=0;
 			tick.eulerAngles=new Vector3(0,0,(tick.eulerAngles.z-6<=-360)?0:tick.eulerAngles.z-6);
 

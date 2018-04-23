@@ -20,11 +20,16 @@ public class CustomIf2 :  Condition
            
            
       
-                condition = PlayerPrefs.GetInt(key,0)>value;
+                condition = PlayerPrefs.GetInt(key,0)==value;
         
            
             return condition;
 		}
+
+
+        public override string GetSummary(){
+            return key + "=" + value;
+        }
 		 
           protected override bool HasNeededProperties()
         {

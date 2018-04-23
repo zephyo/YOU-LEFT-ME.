@@ -4,6 +4,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 using System.Collections.Generic;
+using System;
 
 namespace Fungus
 {
@@ -11,33 +12,35 @@ namespace Fungus
     /// Displays a button in a multiple choice menu.
     /// </summary>
     [CommandInfo("remember",
-                 "GoToScene",
+                 "black",
                  "travel")]
     [AddComponentMenu("")]
-    public class GoToScene : Command
+    public class black : Command
     {
         
-        public scenes before, after;
-
+      
+      public bool Blacken;
 
         #region Public members
 
         public override void OnEnter()
         {
-          manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
+            
 
-             StartCoroutine(m.switchscenes(before,after));
+            manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
 
+			if (Blacken){
+                m.Black();
+                m.strobing=true;
+            } 
+            else m.ForceBlackBegone();
 
             Continue();
         }
 
-
-
-        public override string GetSummary()
-        {
-          
-            return before.ToString()+ " : " +after.ToString();
+        public override string GetSummary(){
+            if (Blacken) return "blacken";
+            else return "begone";
         }
 
         public override Color GetButtonColor()

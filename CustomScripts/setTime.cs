@@ -25,11 +25,16 @@ namespace Fungus
         public override void OnEnter()
         {
 
-            DateTime dt = manager.instance.getTime();
-            dt=dt.AddHours(addhours);
-             PlayerPrefs.SetString("time",dt.ToString("M/d/yyyy h:mm tt"));
-           
-            manager.instance.setTime();
+            manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
+            DateTime dt = m.getTime();
+            if (dt.Hour + addhours < 24)
+            {
+                dt = dt.AddHours(addhours);
+            }
+
+            PlayerPrefs.SetString("time", dt.ToString("M/d/yyyy h:mm tt"));
+
+            m.setTime();
 
             Continue();
         }

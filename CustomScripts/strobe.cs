@@ -21,12 +21,14 @@ namespace Fungus
       
       public float time;
 
+    
+
         #region Public members
 
         public override void OnEnter()
         {
-          
-			StartCoroutine(manager.instance.Strobe(1,time));
+          manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
+			StartCoroutine(m.Strobe(1,time));
 
             Continue();
         }

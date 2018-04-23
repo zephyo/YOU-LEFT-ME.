@@ -30,7 +30,8 @@ public enum scenes
     docTalk,
     grave,
     goodending,
-    badending
+    badending,
+    pills
 }
 
 public enum endings
@@ -53,7 +54,7 @@ public class manager : MonoBehaviour
     public GlitchEffect glitch;
     public Fluid2DBlur fluid;
 
-    public Sprite[] bed, metro, work, cliff, doctors, grave, endings;
+    public Sprite[] bed, metro, work, cliff, doctors, grave, endings, misc;
 
     private Dictionary<string, EventTrigger> selectors;
 
@@ -61,8 +62,9 @@ public class manager : MonoBehaviour
 
     public GameObject clock;
 
+
     [HideInInspector]
-    public static manager instance;
+    public bool strobing;
 
     public Material basicbitchfont;
 
@@ -78,15 +80,7 @@ public class manager : MonoBehaviour
     private void Awake()
     {
 
-        if (instance != null && instance != this)
-        {
-            Destroy(this.gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
-
+     
         selectors = new Dictionary<string, EventTrigger>();
         unusedSelectors = new Queue<EventTrigger>();
     }
@@ -104,12 +98,14 @@ public class manager : MonoBehaviour
         }
         else
         {
+
             wakeup();
             setTime();
             bedroom();
 
         }
     }
+
     void removeBoxes()
     {
         Transform c = transform.GetChild(0);
@@ -175,6 +171,17 @@ public class manager : MonoBehaviour
                 sm.scale = new Vector3(1, 4.137f, 1);
 
 
+                GameObject cache = GameObject.FindGameObjectWithTag("Finish");
+                if (cache != null)
+                {
+                    pauses p = cache.GetComponent<pauses>();
+                    p.down.TransitionTo(3f);
+                    AudioSource ass = p.GetComponent<AudioSource>();
+                    StartCoroutine(p.waitthenUp(3f, ass, 0));
+
+                }
+
+
                 transform.GetChild(0).GetChild(0).localPosition = new Vector3(0, 0, 70);
                 transform.GetChild(0).GetChild(1).localPosition = new Vector3(0, 0, 50);
                 break;
@@ -182,16 +189,19 @@ public class manager : MonoBehaviour
                 transform.GetChild(0).GetChild(3).localPosition = new Vector3(0, 0, -30);
                 break;
             case scenes.work:
+                GetComponent<AudioSource>().Stop();
                 transform.GetChild(0).GetChild(1).localPosition = new Vector3(0, 0, 50);
                 removeBoxes();
                 break;
             case scenes.workTalk:
                 transform.GetChild(0).GetChild(1).localPosition = new Vector3(0, 0, 50);
                 transform.GetChild(0).GetChild(3).localPosition = new Vector3(0, 0, -30);
+                transform.GetChild(0).GetChild(3).GetComponent<EventTrigger>().enabled = true;
                 break;
             case scenes.workTalkManager:
                 transform.GetChild(0).GetChild(1).localPosition = new Vector3(0, 0, 50);
                 transform.GetChild(0).GetChild(3).localPosition = new Vector3(0, 0, -30);
+                transform.GetChild(0).GetChild(3).GetComponent<EventTrigger>().enabled = true;
                 break;
             case scenes.cliff:
                 ParticleSystem pss = setParticleColor(Color.white);
@@ -206,7 +216,7 @@ public class manager : MonoBehaviour
                 break;
 
             case scenes.docTalk:
-                BlackBegone();
+                //   BlackBegone();
                 break;
             case scenes.grave:
 
@@ -243,17 +253,30 @@ public class manager : MonoBehaviour
 
                 break;
             case scenes.metroA:
+
+                GameObject cache = GameObject.FindGameObjectWithTag("Finish");
+                if (cache != null)
+                {
+                    pauses p = cache.GetComponent<pauses>();
+                    p.down.TransitionTo(2f);
+                    AudioSource ass = p.GetComponent<AudioSource>();
+                    StartCoroutine(p.waitthenUp(2f, ass, 3));
+
+                }
+
+
                 ParticleSystem ps = setParticleColor(Color.red);
                 ps.transform.localPosition = new Vector3(510, 305.03f, 0);
                 var main = ps.main;
                 main.maxParticles = 40;
                 ParticleSystem.EmissionModule em = ps.emission;
-                em.rate = 5;
+                em.rateOverTime = 5;
                 ParticleSystem.ShapeModule sm = ps.shape;
                 sm.scale = new Vector3(4.8f, 4.137f, 1);
                 metroAFTER();
                 break;
             case scenes.work:
+                GetComponent<AudioSource>().Play();
                 workFactory();
                 break;
             case scenes.workTalk:
@@ -276,8 +299,12 @@ public class manager : MonoBehaviour
                 graveyard();
                 break;
 
-                  case scenes.docTalk:
-                Black();
+            case scenes.docTalk:
+                doc();
+                break;
+
+            case scenes.pills:
+                pills();
                 break;
 
             case scenes.goodending:
@@ -296,18 +323,19 @@ public class manager : MonoBehaviour
 
     void wakeup()
     {
+        fluid._accum = 0.1f;
         fluid.enabled = true;
         LeanTween.value(gameObject, (float val) =>
       {
 
           fluid._atten = val * 0.525f;
-      }, 1, 0, 0.5f).setEaseInCubic().setOnComplete(() =>
+      }, 1, 0, 0.5f).setEaseInQuart().setOnComplete(() =>
       {
           LeanTween.value(gameObject, (float val) =>
           {
 
               fluid._accum = val;
-          }, 0.05f, 1, 1.3f).setEaseOutCubic().setOnComplete(() =>
+          }, 0.05f, 1, 1.3f).setEaseInCubic().setOnComplete(() =>
              {
                  fluid.enabled = false;
              });
@@ -319,10 +347,13 @@ public class manager : MonoBehaviour
     {
         Camera.main.nearClipPlane = 85.9f;
         PlayerPrefs.SetInt("new", 1);
-        DateTime morning = DateTime.Now;
-        morning = morning.AddHours(7 - morning.Hour);
-        Debug.Log(morning.Hour);
-        PlayerPrefs.SetString("time", morning.ToString("M/d/yyyy h:mm tt"));
+        if (PlayerPrefs.GetString("time", "") == "")
+        {
+            DateTime morning = DateTime.Now;
+            morning = morning.AddHours(7 - morning.Hour);
+            PlayerPrefs.SetString("time", morning.ToString("M/d/yyyy h:mm tt"));
+        }
+
         time.gameObject.SetActive(false);
         setTime();
         Tutorial1();
@@ -434,8 +465,8 @@ public class manager : MonoBehaviour
 
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMax = new Vector2(0, -400);
-        rt.offsetMin = new Vector2(0, 400);
+        rt.offsetMax = new Vector2(0, -500);
+        rt.offsetMin = new Vector2(0, 500);
         TextMeshProUGUI TXT = SP.GetComponent<TextMeshProUGUI>();
 
         TXT.text = "<b>" + PlayerPrefs.GetString("time") + "</b>: <color=#9affd9>wake up.";
@@ -658,7 +689,18 @@ public class manager : MonoBehaviour
     }
     public void BlackBegone()
     {
+        if (!strobing)
+        {
+            Camera.main.cullingMask = -1;
+        }
+
+    }
+
+    public void ForceBlackBegone()
+    {
         Camera.main.cullingMask = -1;
+
+
     }
     public IEnumerator Strobe(int times, float yieldTime, Action onComplete = null)
     {
@@ -670,6 +712,8 @@ public class manager : MonoBehaviour
           GUI.color = new Color(1,1,1, fadeAlpha);    
                 GUI.depth = -1000;
                 GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), screenFadeTexture); */
+
+        strobing = true;
         for (int i = 0; i < times; i++)
         {
 
@@ -679,6 +723,7 @@ public class manager : MonoBehaviour
 
             yield return between;
         }
+        strobing = false;
         cam.cullingMask = -1;
         if (onComplete != null) onComplete();
     }
@@ -858,9 +903,23 @@ public class manager : MonoBehaviour
 
     public void ForceshowFlowers()
     {
+        PlayerPrefs.SetInt("flowers", 1);
+        Image rite = transform.GetChild(0).GetChild(1).gameObject.GetComponent<Image>();
+        rite.color = Color.clear;
+        rite.gameObject.SetActive(true);
+        Image f = transform.GetChild(0).GetChild(2).gameObject.GetComponent<Image>();
+        f.color = Color.clear;
+        f.gameObject.SetActive(true);
+        float origZ = rite.rectTransform.localPosition.z;
+        LeanTween.value(gameObject, (float v) =>
+        {
 
-        transform.GetChild(0).GetChild(1).gameObject.SetActive(true);
-        transform.GetChild(0).GetChild(2).gameObject.SetActive(true);
+            f.color = new Color(1, 1, 1, v * 3f);
+            rite.color = new Color(1, 1, 1, v);
+            rite.rectTransform.localPosition=new Vector3(rite.transform.localPosition.x, rite.transform.localPosition.y, origZ-70*(1-v));
+
+        }, 0, 1, 5).setEaseInOutCirc();
+
         flowerparticles(new Color(0.64f, 0.52f, 1, 1)).transform.localPosition = new Vector3(531.8f, 564, 793);
 
     }
@@ -959,8 +1018,6 @@ public class manager : MonoBehaviour
             pauses p = cache.GetComponent<pauses>();
             p.down.TransitionTo(2f);
             AudioSource ass = p.GetComponent<AudioSource>();
-
-
             StartCoroutine(p.waitthenUp(2f, ass, 2));
 
         }
@@ -977,8 +1034,6 @@ public class manager : MonoBehaviour
           }, 1, 0f, 2.5f).setEaseOutCubic().setOnComplete(() =>
              {
                  ghostt2();
-                 Camera.main.backgroundColor = new Color(0.309f, 0.66f, 0.8f);
-                 StartCoroutine(Strobe(1, 1));
                  fluid.enabled = false;
 
 
@@ -998,8 +1053,8 @@ public class manager : MonoBehaviour
 
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
-        rt.offsetMax = new Vector2(0, -400);
-        rt.offsetMin = new Vector2(0, 400);
+        rt.offsetMax = new Vector2(0, -450);
+        rt.offsetMin = new Vector2(0, 450);
         TextMeshProUGUI TXT = SP.GetComponent<TextMeshProUGUI>();
         TXT.color = new Color(0.36f, 0.76f, 1f);
 
@@ -1068,9 +1123,9 @@ public class manager : MonoBehaviour
 
       {
           goodpt2();
-          Camera.main.backgroundColor = new Color(0.91f, 0.913f, 0.82f);
-          StartCoroutine(Strobe(1, 1));
-          fluid.enabled = false;
+
+
+
 
 
       });
@@ -1087,10 +1142,10 @@ public class manager : MonoBehaviour
         RectTransform rt = (RectTransform)SP.transform;
 
 
-        rt.anchorMin = Vector2.zero;
+        rt.anchorMin = Vector2.one;
         rt.anchorMax = Vector2.one;
-        rt.offsetMax = new Vector2(0, -400);
-        rt.offsetMin = new Vector2(0, 400);
+        rt.anchoredPosition = new Vector2(-394.9f, -316);
+        rt.sizeDelta = new Vector2(517, 530.7f);
         TextMeshProUGUI TXT = SP.GetComponent<TextMeshProUGUI>();
         TXT.color = new Color(0.69f, 0.65f, 0.62f);
 
@@ -1107,6 +1162,37 @@ public class manager : MonoBehaviour
         cb.highlightedColor = Color.yellow;
         cb.pressedColor = Color.black;
         b.colors = cb;
+        fluid.enabled = false;
+        b.onClick.AddListener(() =>
+        {
+            StartCoroutine(goodpt3(TXT, b));
+        });
+    }
+
+
+    IEnumerator goodpt3(TextMeshProUGUI TXT, Button b)
+    {
+            EventSystem.current.SetSelectedGameObject(null);
+
+        Color orig = TXT.color;
+        b.onClick.RemoveAllListeners();
+        TXT.color = Color.clear;
+        yield return new WaitForSeconds(0.4f);
+        TXT.color = orig;
+        TXT.text = "end.";
+
+        yield return new WaitForSeconds(2f);
+        TXT.color = Color.clear;
+        yield return new WaitForSeconds(0.4f);
+        TXT.color = orig;
+
+        TXT.text += "\n<i><size=70%>dedicated to everyone who's lost anyone";
+     
+          yield return new WaitForSeconds(2f);
+        TXT.color = Color.clear;
+           TXT.text += "\n\n<i><size=60%>thank you for playing.";
+        yield return new WaitForSeconds(0.4f);
+        TXT.color = orig;
 
         b.onClick.AddListener(() =>
         {
@@ -1124,6 +1210,7 @@ public class manager : MonoBehaviour
 
         });
     }
+
 
 
 
@@ -1213,6 +1300,18 @@ public class manager : MonoBehaviour
 
     public void cliffSuicide()
     {
+
+        GameObject cache = GameObject.FindGameObjectWithTag("Finish");
+        if (cache != null)
+        {
+            pauses p = cache.GetComponent<pauses>();
+            p.down.TransitionTo(2f);
+            AudioSource ass = p.GetComponent<AudioSource>();
+            StartCoroutine(p.waitthenUp(2f, ass, 3));
+
+        }
+
+
         StartCoroutine(Strobe(1, 0.7f));
         Image x = transform.GetChild(0).GetChild(3).GetComponent<Image>();
         x.rectTransform.pivot = new Vector2(0.756943f, 0.03712533f);
@@ -1289,6 +1388,7 @@ public class manager : MonoBehaviour
         Vector3 begin = new Vector3(1387.9f, 776.3f, 300.8f);
         for (int i = 4; i > -1; i--)
         {
+            if (arr[i] == null) yield break;
             arr[i].transform.localPosition = begin;
             arr[i].gameObject.SetActive(true);
             yield return new WaitForSeconds(UnityEngine.Random.Range(2.1f, 3f));
@@ -1305,7 +1405,7 @@ public class manager : MonoBehaviour
         bg.rectTransform.GetChild(0).gameObject.SetActive(false);
         stuff.Add(bg.rectTransform.GetChild(1).GetComponent<Image>());
         bg.rectTransform.GetChild(2).gameObject.SetActive(false);
-        stuff.Add(bg.rectTransform.GetChild(3).GetComponent<Image>());
+        stuff.Add(bg.rectTransform.GetChild(3).GetComponent<Image>());//stuff[i].GetComponent<EventTrigger>().enabled=false;
 
         for (int i = 0; i < 3; i++)
         {
@@ -1322,7 +1422,8 @@ public class manager : MonoBehaviour
             else if (stuff[i].name == "fore")
             {
                 stuff[i].SetNativeSize();
-                stuff[i].rectTransform.localPosition = new Vector3(-16.41536f, -350.6f, -63.6f);
+                stuff[i].rectTransform.localPosition = new Vector3(-16.41536f, -350.6f, -86.65f);
+                stuff[i].GetComponent<EventTrigger>().enabled = false;
 
             }
 
@@ -1362,7 +1463,8 @@ public class manager : MonoBehaviour
             else if (stuff[i].name == "fore")
             {
 
-                stuff[i].rectTransform.localPosition = new Vector3(-16.41536f, -350.6f, -63.6f);
+                stuff[i].rectTransform.localPosition = new Vector3(-16.41536f, -350.6f, -86.65f);
+                stuff[i].GetComponent<EventTrigger>().enabled = false;
 
             }
 
@@ -1399,7 +1501,9 @@ public class manager : MonoBehaviour
 
             stuff[i].sprite = grave[i];
             stuff[i].SetNativeSize();
-            stuff[i].gameObject.SetActive(true);
+            if (stuff[i].name == "fore" || stuff[i].name == "bg")
+                stuff[i].gameObject.SetActive(true);
+            else stuff[i].gameObject.SetActive(false);
             if (stuff[i].name == "mid")
             {
                 stuff[i].transform.localPosition = new Vector3(0, -287.4839f, -7.6f);
@@ -1411,8 +1515,53 @@ public class manager : MonoBehaviour
 
             stuff[i].rectTransform.anchoredPosition = positions[i];
         }
+        Destroy(bg.transform.GetChild(3).GetComponent<EventTrigger>());
 
-        sendmessage sm = GetComponent<sendmessage>();
+      
+    }
+
+    public void realGraveyardThings()
+    {
+        Transform c = transform.GetChild(0);
+        for (int i = 0; i < 3; i++)
+        {
+
+            if (i == 0)
+            {
+                Image g = c.GetChild(i).GetComponent<Image>();
+                g.color = Color.clear;
+                Vector2 orig = g.rectTransform.anchoredPosition;
+                LeanTween.value(gameObject, (float v) =>
+                {
+                    g.color = new Color(1, 1, 1, v);
+                    g.rectTransform.anchoredPosition = new Vector2(orig.x, orig.y - 25 + 25 * v);
+                }, 0, 1, 2).setEaseInOutCubic();
+            }
+            else if (i == 1)
+            {
+                Image g = c.GetChild(i).GetComponent<Image>();
+                g.color = Color.clear;
+                Vector2 orig = g.rectTransform.anchoredPosition;
+                LeanTween.value(gameObject, (float v) =>
+                {
+                    g.color = new Color(1, 1, 1, v);
+                    g.rectTransform.anchoredPosition = new Vector2(orig.x, orig.y - 15 + 15 * v);
+                }, 0, 1, 5f).setEaseInOutCubic();
+            }
+            else
+            {
+                Image g = c.GetChild(i).GetComponent<Image>();
+                g.color = Color.clear;
+                Vector2 orig = g.rectTransform.anchoredPosition;
+                LeanTween.value(gameObject, (float v) =>
+                {
+                    g.color = new Color(1, 1, 1, v);
+                    g.rectTransform.anchoredPosition = new Vector2(orig.x, orig.y - 8 + 8 * v);
+                }, 0, 1, 3f).setEaseInOutCubic();
+            }
+            c.GetChild(i).gameObject.SetActive(true);
+        }
+          sendmessage sm = GetComponent<sendmessage>();
 
         string listen = "hergrave";
         setUpSelector(new Vector3(0, 167.8951f, 70), new Vector2(299.9f, 286.23f), listen);
@@ -1422,6 +1571,51 @@ public class manager : MonoBehaviour
             sm.ClickString(listen);
         });
     }
+
+    void doc()
+    {
+
+        Image bg = transform.GetChild(0).GetComponent<Image>();
+        bg.sprite = misc[0];
+        foreach (Transform c in bg.rectTransform)
+        {
+            c.gameObject.SetActive(false);
+        }
+    }
+
+    void pills()
+    {
+
+        GameObject cache = GameObject.FindGameObjectWithTag("Finish");
+        if (cache != null)
+        {
+            pauses p = cache.GetComponent<pauses>();
+            p.down.TransitionTo(2f);
+            AudioSource ass = p.GetComponent<AudioSource>();
+            StartCoroutine(p.waitthenUp(2f, ass, 3));
+
+        }
+
+
+        Image bg = transform.GetChild(0).GetComponent<Image>();
+        bg.sprite = misc[1];
+        foreach (Transform c in bg.rectTransform)
+        {
+            if (c.name == "fore")
+            {
+                Image f = c.GetComponent<Image>();
+                f.sprite = misc[2];
+                Destroy(c.GetComponent<EventTrigger>());
+                f.SetNativeSize();
+                f.rectTransform.localPosition = new Vector3(213.6f, -150.4f, -73.6f);
+                continue;
+            }
+            c.gameObject.SetActive(false);
+        }
+
+    }
+
+
 
     public void doctorsWaitingArea()
     {
@@ -1439,24 +1633,24 @@ public class manager : MonoBehaviour
         string listen = "doc";
         setUpSelector(new Vector3(629.6051f, -49.22672f, 70), new Vector2(165.3f, 373.3f), listen);
 
-        changeClickSelector(selectors[listen], () =>
+        changeClickSelector(selectors["doc"], () =>
         {
-            sm.ClickString(listen);
+            sm.ClickString("doc");
         });
 
         listen = "line";
         setUpSelector(new Vector3(-714.1f, -157.1519f, 70), new Vector2(722.5f, 701.1f), listen);
 
-        changeClickSelector(selectors[listen], () =>
+        changeClickSelector(selectors["line"], () =>
                {
-                   sm.ClickString(listen);
+                   sm.ClickString("line");
                });
 
         listen = "girlwaiting";
         setUpSelector(new Vector3(-57.2f, -212.7f, 70), new Vector2(287f, 593.4f), listen);
-        changeClickSelector(selectors[listen], () =>
+        changeClickSelector(selectors["girlwaiting"], () =>
                {
-                   sm.ClickString(listen);
+                   sm.ClickString("girlwaiting");
                });
 
     }
@@ -1473,10 +1667,18 @@ public class manager : MonoBehaviour
             {
                 Image x = c.GetComponent<Image>();
                 x.sprite = endings[1];
+                x.color=Color.clear;
+
                 Destroy(c.GetComponent<EventTrigger>());
                 x.SetNativeSize();
                 x.rectTransform.anchoredPosition = new Vector2(0, -40);
                 c.gameObject.SetActive(true);
+                Vector2 orig =  x.rectTransform.anchoredPosition;
+                  LeanTween.value(gameObject, (float v) =>
+                {
+                    x.color = new Color(1, 1, 1, v);
+                    x.rectTransform.anchoredPosition = new Vector2(orig.x, orig.y - 70 + 70 * v);
+                }, 0, 1, 5).setEaseInOutCubic();
                 continue;
             }
             c.gameObject.SetActive(false);

@@ -28,10 +28,13 @@ namespace Fungus
 
         public override void OnEnter()
         {
-            Image bg = manager.instance.transform.GetChild(0).GetComponent<Image>();
+             GameObject m = GameObject.FindGameObjectWithTag("manager");
+
+		
+            Image bg = m.transform.GetChild(0).GetComponent<Image>();
             Color current = bg.color;
 
-            LeanTween.value(manager.instance.gameObject, (float v)=>{
+            LeanTween.value(m, (float v)=>{
                 float rat= v/1;
                   bg.color = new Color (Mathf.Lerp(current.r, c.r, rat),Mathf.Lerp(current.g, c.g, rat),Mathf.Lerp(current.b, c.b, rat),1 );
             }, 0, 1, 5);

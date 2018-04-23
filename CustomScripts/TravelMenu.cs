@@ -38,11 +38,11 @@ namespace Fungus
 
                 var flowchart = GetFlowchart();
                 string displayText = flowchart.SubstituteVariables(text);
+                 manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
 
                 menuDialog.AddOption(displayText, interactable, ()=>{
-                        
-
-                        StartCoroutine(manager.instance.switchscenes(before,after));
+                       
+                        StartCoroutine(m.switchscenes(before,after));
 
                 });
             }

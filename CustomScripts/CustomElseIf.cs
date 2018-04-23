@@ -47,6 +47,11 @@ namespace Fungus
            
             return condition;
 		}
+
+         public override string GetSummary(){
+            return key + "=" + value;
+        }
+		 
 		 
           protected override bool HasNeededProperties()
         {

@@ -24,11 +24,11 @@ namespace Fungus
 
         public override void OnEnter()
         {
-          
+            manager m = GameObject.FindGameObjectWithTag("manager").GetComponent<manager>();
 
-         if (e==endings.suicide) manager.instance.suicideending();
-         else if (e==endings.good) manager.instance.good();
-          else if (e==endings.ghost) manager.instance.ghost();
+         if (e==endings.suicide) m.suicideending();
+         else if (e==endings.good) m.good();
+          else if (e==endings.ghost) m.ghost();
 
 
             Continue();

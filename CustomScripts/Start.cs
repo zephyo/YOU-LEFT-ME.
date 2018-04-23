@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -18,6 +19,20 @@ public class Start : MonoBehaviour
     public void NewGame()
     {
 
+         DateTime morning = DateTime.Now;
+        morning = morning.AddHours(7 - morning.Hour);
+        PlayerPrefs.SetString("time", morning.ToString("M/d/yyyy h:mm tt"));
+
+
+        string[] deleteDis = new string[]{
+            "tt", "report", "box", "catt", "moon"
+        };
+
+        foreach (string s in deleteDis){
+              PlayerPrefs.DeleteKey(s);
+        }
+      
+
 
         game();
     }
@@ -34,7 +49,7 @@ public class Start : MonoBehaviour
 
 
 
-            SceneManager.LoadScene(1);
+            SceneManager.LoadScene("Main");
         });
 
     }
