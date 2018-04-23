@@ -1,5 +1,5 @@
-# Can-t-remember-you.
-dark/funny game about loss
+# YOU LEFT ME
+dark game about loss
 
 used plugins:
 * TMPro
