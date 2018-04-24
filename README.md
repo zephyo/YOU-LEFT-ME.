@@ -1,6 +1,3 @@
-# YOU LEFT ME
-dark game about loss
-
 ![banner](https://img.itch.zone/aW1nLzExOTEwODUucG5n/original/cOtWHW.png "banner")
 
 
